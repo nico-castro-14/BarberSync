@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BarberSync PRO — Sistema Integral de Barbería &amp; Reservas</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              goldLight: '#FDE68A',
+              goldHover: '#D97706',
+              dark: '#0A0C10',
+              card: '#131720',
+              cardHover: '#1B212E',
+              border: '#1E2638',
+              muted: '#8491A5'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- React & ReactDOM -->
+<script crossorigin="" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin="" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- Babel Standalone for JSX -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+    body {
+      background-color: #0A0C10;
+      color: #F3F4F6;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0A0C10;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E2638;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #F59E0B;
+    }
+    
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FFFBEB 0%, #F59E0B 50%, #B45309 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-border-glow {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+    }
+    .whatsapp-bg {
+      background-color: #0c151c;
+      background-image: radial-gradient(#1f2c34 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-amber-500 selection:text-black">
+<div id="root"></div>
+<script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- Mock Data & Constants ---
+    const SERVICES = [
+      { id: 's1', name: 'Corte Clásico & Peinado', price: '$22.000', numericPrice: 22000, duration: '35 min', desc: 'Tijera o máquina, lavado capilar y peinado con cera mate pomade.', icon: 'scissors', popular: false, tag: 'Clásico' },
+      { id: 's2', name: 'Degradado Premium (Fade)', price: '$26.000', numericPrice: 26000, duration: '45 min', desc: 'Skin, taper o mid fade milimétrico con navaja y toalla caliente aromática.', icon: 'sparkles', popular: true, tag: 'Fade' },
+      { id: 's3', name: 'Ritual Barba Tradicional', price: '$18.000', numericPrice: 18000, duration: '30 min', desc: 'Perfilado con navaja japonesa, toalla caliente y aceites botánicos.', icon: 'spray-can', tag: 'Barba' },
+      { id: 's4', name: 'Combo Insignia: Corte + Barba', price: '$38.000', numericPrice: 38000, duration: '60 min', desc: 'El servicio estrella: degradado a elección, ritual de barba completo y exfoliación.', icon: 'crown', popular: true, tag: 'Fade' },
+      { id: 's5', name: 'Mullet Moderno / Tapered', price: '$27.000', numericPrice: 27000, duration: '50 min', desc: 'Corte en tendencia, texturizado superior y nuca desconectada con navaja libre.', icon: 'flame', tag: 'Mullet' },
+      { id: 's6', name: 'Color / Camuflaje / Platinado', price: '$35.000', numericPrice: 35000, duration: '60 min', desc: 'Decoloración global, mechas platinadas o matización de canas sin daño.', icon: 'paint-brush', tag: 'Tinte' }
+    ];
+
+    const BARBERS_DATA = [
+      { 
+        id: 'b1', 
+        name: 'Mateo "FadeMaster" Silva', 
+        handle: 'mateo-fade',
+        role: 'Master Barber & Director Creativo', 
+        rating: 4.95, 
+        reviews: 348, 
+        initials: 'MS', 
+        color: 'from-amber-600 to-yellow-500', 
+        chair: 'Silla 01',
+        bio: '10 años esculpiendo degradados milimétricos y visagismo capilar. Ganador Battle Barbers Santiago 2023.',
+        specialties: ['Fade', 'Mullet', 'Tinte', 'Texturizado'],
+        earningsToday: 64000,
+        earningsWeek: 380000,
+        tipsToday: 12500,
+        phone: '+56 9 8443 1920'
+      },
+      { 
+        id: 'b2', 
+        name: 'Sebastián Ramos', 
+        handle: 'seba-barber',
+        role: 'Especialista en Barba & Ritual Clásico', 
+        rating: 5.0, 
+        reviews: 224, 
+        initials: 'SR', 
+        color: 'from-stone-600 to-zinc-800', 
+        chair: 'Silla 02',
+        bio: 'Apasionado por la navaja libre, toallas calientes y perfilados de barba de precisión artesanal.',
+        specialties: ['Barba', 'Clásico'],
+        earningsToday: 54000,
+        earningsWeek: 320000,
+        tipsToday: 8000,
+        phone: '+56 9 7311 0943'
+      },
+      { 
+        id: 'b3', 
+        name: 'Carlos "K-rlos" Mendoza', 
+        handle: 'krlos-urban',
+        role: 'Estilista Freestyle & Urbano', 
+        rating: 4.88, 
+        reviews: 192, 
+        initials: 'CM', 
+        color: 'from-yellow-700 to-amber-900', 
+        chair: 'Silla 03',
+        bio: 'Especialista en líneas freestyle, Mullet moderno, texturas extremas y cortes urbanos street-style.',
+        specialties: ['Mullet', 'Texturizado', 'Fade'],
+        earningsToday: 48000,
+        earningsWeek: 290000,
+        tipsToday: 6500,
+        phone: '+56 9 6554 2219'
+      },
+      { 
+        id: 'b4', 
+        name: 'Valentina Osorio', 
+        handle: 'vale-color',
+        role: 'Colorista & Visagismo Capilar', 
+        rating: 4.96, 
+        reviews: 165, 
+        initials: 'VO', 
+        color: 'from-neutral-700 to-stone-500', 
+        chair: 'Silla 04',
+        bio: 'Experta en platinados nórdicos, camuflaje de canas y diseño de patillas/cejas perfiladas.',
+        specialties: ['Tinte', 'Clásico', 'Fade'],
+        earningsToday: 72000,
+        earningsWeek: 410000,
+        tipsToday: 15000,
+        phone: '+56 9 9120 4488'
+      }
+    ];
+
+    const DATES = [
+      { dayName: 'Hoy', dateStr: '15 Mayo', dayNum: '15', iso: '2025-05-15' },
+      { dayName: 'Jue', dateStr: '16 Mayo', dayNum: '16', iso: '2025-05-16' },
+      { dayName: 'Vie', dateStr: '17 Mayo', dayNum: '17', iso: '2025-05-17' },
+      { dayName: 'Sáb', dateStr: '18 Mayo', dayNum: '18', iso: '2025-05-18' },
+      { dayName: 'Dom', dateStr: '19 Mayo', dayNum: '19', iso: '2025-05-19' },
+      { dayName: 'Lun', dateStr: '20 Mayo', dayNum: '20', iso: '2025-05-20' }
+    ];
+
+    const TIME_SLOTS = [
+      { time: '10:00 AM', available: true },
+      { time: '10:45 AM', available: true },
+      { time: '11:30 AM', available: false },
+      { time: '12:15 PM', available: true },
+      { time: '02:00 PM', available: true },
+      { time: '02:45 PM', available: true },
+      { time: '03:30 PM', available: false },
+      { time: '04:15 PM', available: true },
+      { time: '05:00 PM', available: true },
+      { time: '05:45 PM', available: true },
+      { time: '06:30 PM', available: true },
+      { time: '07:15 PM', available: false }
+    ];
+
+    const INITIAL_WORKS = [
+      { id: 101, title: 'Low Taper Fade + Barba Afilada', barberId: 'b1', barberName: 'Mateo Silva', tag: 'Fade', likes: 214, liked: false, desc: 'Acabado en cero pulido con cuchilla Andis y ritual de toalla aromatizada.', imageBg: 'from-amber-950/40 via-stone-900 to-black' },
+      { id: 102, title: 'Modern Mullet con Mucha Textura', barberId: 'b1', barberName: 'Mateo Silva', tag: 'Mullet', likes: 342, liked: false, desc: 'Corte asimétrico texturizado a tijera dentada con peinado efecto mate.', imageBg: 'from-zinc-900 via-neutral-900 to-black' },
+      { id: 103, title: 'Perfilado de Barba de Precisión', barberId: 'b2', barberName: 'Sebastián Ramos', tag: 'Barba', likes: 189, liked: false, desc: 'Línea de mejilla esculpida a navaja libre con bálsamo de cedro.', imageBg: 'from-amber-900/30 via-stone-900 to-black' },
+      { id: 104, title: 'Platinado Blanco Puro & Mid Fade', barberId: 'b4', barberName: 'Valentina Osorio', tag: 'Tinte', likes: 420, liked: false, desc: 'Doble decoloración con Plex y matizado ceniza sin sulfatos.', imageBg: 'from-blue-950/30 via-slate-900 to-black' },
+      { id: 105, title: 'Textured French Crop Limpio', barberId: 'b3', barberName: 'Carlos Mendoza', tag: 'Texturizado', likes: 178, liked: false, desc: 'Corona texturizada para volumen natural y contornos limpios.', imageBg: 'from-stone-900 via-neutral-950 to-black' },
+      { id: 106, title: 'Corte Ejecutivo Clásico Pompadour', barberId: 'b2', barberName: 'Sebastián Ramos', tag: 'Clásico', likes: 126, liked: false, desc: 'Graduación a tijera sobre peine y peinado clásico tradicional con fijación suave.', imageBg: 'from-yellow-950/20 via-zinc-900 to-black' }
+    ];
+
+    const INITIAL_APPOINTMENTS = [
+      { id: 'apt-1', time: '10:00 AM', client: 'Andrés Felipe Morales', phone: '+56 9 8234 1120', service: 'Combo Insignia: Corte + Barba', price: '$38.000', numericPrice: 38000, status: 'completed', barberId: 'b1' },
+      { id: 'apt-2', time: '11:00 AM', client: 'Diego Alejandro Castro', phone: '+56 9 7712 9043', service: 'Degradado Premium (Fade)', price: '$26.000', numericPrice: 26000, status: 'completed', barberId: 'b1' },
+      { id: 'apt-3', time: '12:15 PM', client: 'Esteban Camilo Ruiz', phone: '+56 9 6554 2219', service: 'Ritual Barba Tradicional', price: '$18.000', numericPrice: 18000, status: 'pending', barberId: 'b1' },
+      { id: 'apt-4', time: '02:00 PM', client: 'Martín Ignacio Vergara', phone: '+56 9 9120 4488', service: 'Corte Clásico & Peinado', price: '$22.000', numericPrice: 22000, status: 'pending', barberId: 'b1' },
+      { id: 'apt-5', time: '03:30 PM', client: 'Gonzalo Sebastián Pardo', phone: '+56 9 5431 8765', service: 'Mullet Moderno / Tapered', price: '$27.000', numericPrice: 27000, status: 'pending', barberId: 'b1' },
+      { id: 'apt-6', time: '05:00 PM', client: 'Felipe Sandoval', phone: '+56 9 3211 4455', service: 'Degradado Premium (Fade)', price: '$26.000', numericPrice: 26000, status: 'pending', barberId: 'b1' }
+    ];
+
+    const REVIEWS_MATEO = [
+      { author: 'Cristóbal Valenzuela', rating: 5, date: 'Ayer', text: 'Mateo es el único que logra el degradado a navaja perfecto en Santiago. La atención y el ambiente son 10/10.', verified: true },
+      { author: 'Rodrigo Astudillo', rating: 5, date: 'Hace 3 días', text: 'Excelente corte de mullet moderno. Escucha exactamente lo que buscas y propone mejoras con visagismo.', verified: true },
+      { author: 'Ignacio Palma', rating: 5, date: 'Hace 1 semana', text: 'Puntualidad exacta con el sistema de reserva. Sin esperas y el café de cortesía genial.', verified: true }
+    ];
+
+    // --- Main Component ---
+    function App() {
+      // 4 Main Views:
+      // 'client'   -> 1. Reservar (Cliente)
+      // 'barberProfile' -> 2. Perfil & Portafolio (Vista Cliente / Deep link)
+      // 'barberDashboard' -> 3. Panel Barbero (Ganancias & Citas)
+      // 'adminDashboard'  -> 4. Panel Dueño / Admin
+      const [currentView, setCurrentView] = useState('client');
+
+      // Booking flow
+      const [selectedService, setSelectedService] = useState(SERVICES[1]);
+      const [selectedBarber, setSelectedBarber] = useState(BARBERS_DATA[0]);
+      const [selectedDate, setSelectedDate] = useState(DATES[0]);
+      const [selectedTime, setSelectedTime] = useState('02:00 PM');
+      const [clientForm, setClientForm] = useState({ name: 'Matías Correa', phone: '+56 9 8452 1199' });
+
+      // Confirmation Modal (WhatsApp simulator)
+      const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+      const [confirmedBookingData, setConfirmedBookingData] = useState(null);
+      const [whatsappActionToast, setWhatsappActionToast] = useState(null);
+
+      // Search & Tag Filters for Portfolio
+      const [activeTag, setActiveTag] = useState('Todos');
+      const [searchCutQuery, setSearchCutQuery] = useState('');
+      const [portfolioItems, setPortfolioItems] = useState(INITIAL_WORKS);
+
+      // Barber Dashboard State
+      const [appointments, setAppointments] = useState(INITIAL_APPOINTMENTS);
+      const [showUploadCutModal, setShowUploadCutModal] = useState(false);
+      const [newCutTitle, setNewCutTitle] = useState('');
+      const [newCutDesc, setNewCutDesc] = useState('');
+      const [newCutTag, setNewCutTag] = useState('Fade');
+
+      // Admin Settings State
+      const [businessInfo, setBusinessInfo] = useState({
+        name: 'BarberSync Providencia Flagship',
+        address: 'Av. Providencia 2133, Providencia, Santiago',
+        openingHours: 'Lunes a Sábado: 10:00 - 20:00 hrs',
+        cancellationPolicy: 'Cancelación gratuita hasta 2 horas antes de la cita.'
+      });
+
+      // Toast feedback
+      const [toastMsg, setToastMsg] = useState(null);
+
+      const triggerToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(null), 3200);
+      };
+
+      // Lucide icon helper
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [currentView, activeTag, showWhatsAppModal, showUploadCutModal, portfolioItems, appointments]);
+
+      // Handle Confirm Booking
+      const handleBookingSubmit = (e) => {
+        e.preventDefault();
+        if (!clientForm.name.trim() || !clientForm.phone.trim()) {
+          triggerToast('Por favor ingresa tu nombre y celular');
+          return;
+        }
+
+        const newApt = {
+          id: 'apt-' + Date.now(),
+          time: selectedTime,
+          client: clientForm.name,
+          phone: clientForm.phone,
+          service: selectedService.name,
+          price: selectedService.price,
+          numericPrice: selectedService.numericPrice,
+          status: 'pending',
+          barberId: selectedBarber.id
+        };
+
+        setAppointments(prev => [newApt, ...prev]);
+        setConfirmedBookingData({
+          ...newApt,
+          dateStr: `${selectedDate.dayName} ${selectedDate.dateStr}`,
+          barberName: selectedBarber.name,
+          chair: selectedBarber.chair
+        });
+        setShowWhatsAppModal(true);
+      };
+
+      // Like photo toggle
+      const handleToggleLike = (id) => {
+        setPortfolioItems(prev => prev.map(item => {
+          if (item.id === id) {
+            return {
+              ...item,
+              liked: !item.liked,
+              likes: item.liked ? item.likes - 1 : item.likes + 1
+            };
+          }
+          return item;
+        }));
+      };
+
+      // Publish new cut to portfolio
+      const handlePublishCut = (e) => {
+        e.preventDefault();
+        if (!newCutTitle.trim()) return;
+
+        const newCut = {
+          id: Date.now(),
+          title: newCutTitle,
+          barberId: 'b1',
+          barberName: 'Mateo Silva',
+          tag: newCutTag,
+          likes: 1,
+          liked: true,
+          desc: newCutDesc || 'Nuevo trabajo realizado en BarberSync.',
+          imageBg: 'from-amber-900/40 via-stone-900 to-black'
+        };
+
+        setPortfolioItems([newCut, ...portfolioItems]);
+        setNewCutTitle('');
+        setNewCutDesc('');
+        setShowUploadCutModal(false);
+        triggerToast('¡Nuevo corte publicado exitosamente en tu portafolio!');
+      };
+
+      // Update appointment status in Barber Panel
+      const handleUpdateAptStatus = (id, newStatus) => {
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+        if (newStatus === 'completed') triggerToast('Cita completada e ingreso sumado');
+        if (newStatus === 'noshow') triggerToast('Cita registrada como inasistencia');
+      };
+
+      // Copy Deep Link
+      const copyDeepLink = (handle) => {
+        const url = `barbersync.app/barbero/${handle}`;
+        navigator.clipboard?.writeText ? navigator.clipboard.writeText(url) : null;
+        triggerToast(`¡Link copiado!: ${url}`);
+      };
+
+      // Direct booking with specific barber
+      const handleDirectBookWith = (barber) => {
+        setSelectedBarber(barber);
+        setCurrentView('client');
+        triggerToast(`Reservando directamente con ${barber.name}`);
+      };
+
+      // Filtered Portfolio based on tags and search
+      const filteredPortfolio = useMemo(() => {
+        return portfolioItems.filter(item => {
+          const matchesTag = activeTag === 'Todos' || item.tag.toLowerCase() === activeTag.toLowerCase();
+          const matchesSearch = !searchCutQuery.trim() || 
+            item.title.toLowerCase().includes(searchCutQuery.toLowerCase()) || 
+            item.tag.toLowerCase().includes(searchCutQuery.toLowerCase()) ||
+            item.barberName.toLowerCase().includes(searchCutQuery.toLowerCase());
+          return matchesTag && matchesSearch;
+        });
+      }, [portfolioItems, activeTag, searchCutQuery]);
+
+      // Calculate Barber Dashboard Metrics
+      const barber1Appointments = appointments.filter(a => a.barberId === 'b1');
+      const barberCompletedApts = barber1Appointments.filter(a => a.status === 'completed');
+      const barberPendingCount = barber1Appointments.filter(a => a.status === 'pending').length;
+      const computedBarberTodayEarned = barberCompletedApts.reduce((acc, a) => acc + a.numericPrice, 0);
+
+      return (
+        <div className="min-h-screen bg-[#0A0C10] flex flex-col text-slate-100 antialiased selection:bg-amber-500 selection:text-black">
+          
+          {/* Toast Notification Alert */}
+          {toastMsg && (
+            <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-brand-card border border-brand-gold/60 text-white px-5 py-3.5 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-0 gold-border-glow">
+              <div className="w-2.5 h-2.5 rounded-full bg-brand-gold animate-ping"></div>
+              <p className="text-sm font-semibold">{toastMsg}</p>
+              <button onClick={() => setToastMsg(null)} className="text-slate-400 hover:text-white ml-2">
+                <i data-lucide="x" className="w-4 h-4"></i>
+              </button>
+            </div>
+          )}
+
+          {/* Top Persistent App Header / Navigation Bar */}
+          <header className="sticky top-0 z-40 bg-[#0A0C10]/95 backdrop-blur-md border-b border-brand-border">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
+              
+              {/* Brand Logo */}
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('client')}>
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-brand-gold to-amber-700 flex items-center justify-center text-black font-extrabold shadow-lg shadow-amber-500/20">
+                  <i data-lucide="scissors" className="w-6 h-6 text-black stroke-[2.5]"></i>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-extrabold tracking-tight text-white">Barber<span className="text-brand-gold">Sync</span></span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-brand-gold/15 border border-brand-gold/40 text-brand-gold">PRO</span>
+                  </div>
+                  <p className="text-xs text-brand-muted hidden sm:block">Plataforma de Reserva, Portafolio & Gestión</p>
+                </div>
+              </div>
+
+              {/* 4 Navigation Roles Switcher (Desktop & Tablet) */}
+              <nav className="hidden md:flex items-center bg-brand-card p-1.5 rounded-2xl border border-brand-border">
+                <button
+                  onClick={() => setCurrentView('client')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${
+                    currentView === 'client'
+                      ? 'bg-brand-gold text-black shadow-md font-extrabold'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <i data-lucide="calendar" className="w-4 h-4"></i>
+                  <span>1. Reservar (Cliente)</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('barberProfile')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${
+                    currentView === 'barberProfile'
+                      ? 'bg-brand-gold text-black shadow-md font-extrabold'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <i data-lucide="sparkles" className="w-4 h-4"></i>
+                  <span>2. Perfil & Portafolio</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('barberDashboard')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${
+                    currentView === 'barberDashboard'
+                      ? 'bg-brand-gold text-black shadow-md font-extrabold'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <i data-lucide="dollar-sign" className="w-4 h-4"></i>
+                  <span>3. Panel Barbero</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('adminDashboard')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-bold transition-all duration-200 ${
+                    currentView === 'adminDashboard'
+                      ? 'bg-brand-gold text-black shadow-md font-extrabold'
+                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <i data-lucide="shield-check" className="w-4 h-4"></i>
+                  <span>4. Dueño / Admin</span>
+                </button>
+              </nav>
+
+              {/* Status Indicator */}
+              <div className="flex items-center gap-2.5">
+                <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-300 px-3.5 py-2 rounded-xl bg-brand-card border border-brand-border">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Sede Providencia • 4 Sillas Activas</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Navigation Tabs */}
+            <div className="md:hidden flex border-t border-brand-border bg-brand-dark px-2 py-2 justify-around text-xs">
+              <button
+                onClick={() => setCurrentView('client')}
+                className={`py-1.5 px-2 font-bold flex items-center gap-1.5 rounded-lg ${currentView === 'client' ? 'text-brand-gold bg-brand-gold/10' : 'text-slate-400'}`}
+              >
+                <i data-lucide="calendar" className="w-4 h-4"></i> Cliente
+              </button>
+              <button
+                onClick={() => setCurrentView('barberProfile')}
+                className={`py-1.5 px-2 font-bold flex items-center gap-1.5 rounded-lg ${currentView === 'barberProfile' ? 'text-brand-gold bg-brand-gold/10' : 'text-slate-400'}`}
+              >
+                <i data-lucide="sparkles" className="w-4 h-4"></i> Portafolio
+              </button>
+              <button
+                onClick={() => setCurrentView('barberDashboard')}
+                className={`py-1.5 px-2 font-bold flex items-center gap-1.5 rounded-lg ${currentView === 'barberDashboard' ? 'text-brand-gold bg-brand-gold/10' : 'text-slate-400'}`}
+              >
+                <i data-lucide="dollar-sign" className="w-4 h-4"></i> Barbero
+              </button>
+              <button
+                onClick={() => setCurrentView('adminDashboard')}
+                className={`py-1.5 px-2 font-bold flex items-center gap-1.5 rounded-lg ${currentView === 'adminDashboard' ? 'text-brand-gold bg-brand-gold/10' : 'text-slate-400'}`}
+              >
+                <i data-lucide="shield" className="w-4 h-4"></i> Dueño
+              </button>
+            </div>
+          </header>
+
+          {/* Main Viewport */}
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-10">
+
+            {/* ========================================================================= */}
+            {/* VIEW 1: CLIENTE - RESERVA ULTRA-SIMPLE CON STEPPER Y CONFIRMACIÓN WHATSAPP */}
+            {/* ========================================================================= */}
+            {currentView === 'client' && (
+              <div className="space-y-10 animate-fade-in">
+                
+                {/* Hero Minimalista Directo */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-card via-[#161C28] to-brand-card border border-brand-border p-6 sm:p-10 shadow-2xl">
+                  <div className="absolute -right-12 -bottom-12 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                  
+                  <div className="max-w-2xl relative z-10 space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-xs font-extrabold uppercase tracking-wider">
+                      <i data-lucide="check-circle" className="w-3.5 h-3.5"></i> Fricción Cero • Sin Registro Previo
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                      Tu estilo impecable, <span className="gold-gradient-text">sin filas ni esperas.</span>
+                    </h1>
+                    <p className="text-sm sm:text-base text-slate-400 font-normal">
+                      Selecciona tu servicio, tu barbero favorito y confirma tu hora en segundos con recordatorio automatizado a tu WhatsApp.
+                    </p>
+
+                    {/* Quick switch to explore barber portfolios */}
+                    <div className="pt-2 flex items-center gap-3">
+                      <button 
+                        onClick={() => setCurrentView('barberProfile')}
+                        className="inline-flex items-center gap-2 text-xs font-bold text-brand-gold hover:text-amber-400 underline underline-offset-4"
+                      >
+                        <i data-lucide="image" className="w-3.5 h-3.5"></i>
+                        Ver portafolio de cortes con fotos reales antes de reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formulario de Reserva con Stepper Visual */}
+                <form onSubmit={handleBookingSubmit} className="space-y-12">
+                  
+                  {/* STEPPER BAR */}
+                  <div className="flex items-center justify-between max-w-2xl mx-auto px-4 py-3 bg-brand-card rounded-2xl border border-brand-border">
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-gold">
+                      <span className="w-6 h-6 rounded-full bg-brand-gold text-black flex items-center justify-center font-extrabold">1</span>
+                      <span>Servicio</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-brand-border"></div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-gold">
+                      <span className="w-6 h-6 rounded-full bg-brand-gold text-black flex items-center justify-center font-extrabold">2</span>
+                      <span>Barbero</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-brand-border"></div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-gold">
+                      <span className="w-6 h-6 rounded-full bg-brand-gold text-black flex items-center justify-center font-extrabold">3</span>
+                      <span>Fecha & Hora</span>
+                    </div>
+                    <div className="w-8 h-0.5 bg-brand-border"></div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                      <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center font-extrabold">✓</span>
+                      <span>Listo</span>
+                    </div>
+                  </div>
+
+                  {/* PASO 1: SELECCIONA TU SERVICIO */}
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-brand-gold text-black font-black text-sm flex items-center justify-center shadow-md">1</span>
+                        <div>
+                          <h2 className="text-xl font-bold text-white">Selecciona tu Servicio</h2>
+                          <p className="text-xs text-brand-muted">Tarifas claras sin cargos ocultos</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-brand-muted hidden sm:inline-block">Pago directo en el local (Efectivo / Tarjeta)</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {SERVICES.map(svc => {
+                        const isSelected = selectedService.id === svc.id;
+                        return (
+                          <div
+                            key={svc.id}
+                            onClick={() => setSelectedService(svc)}
+                            className={`cursor-pointer group relative p-5 rounded-2xl border transition-all duration-200 ${
+                              isSelected
+                                ? 'bg-[#181F2C] border-brand-gold shadow-xl shadow-amber-500/10 scale-[1.01]'
+                                : 'bg-brand-card/90 border-brand-border hover:border-slate-600 hover:bg-brand-cardHover'
+                            }`}
+                          >
+                            {svc.popular && (
+                              <span className="absolute top-3 right-3 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold border border-brand-gold/40">
+                                Popular
+                              </span>
+                            )}
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-1 pr-3">
+                                <h3 className={`font-bold text-base transition-colors ${isSelected ? 'text-brand-gold' : 'text-white'}`}>
+                                  {svc.name}
+                                </h3>
+                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                  <span className="flex items-center gap-1"><i data-lucide="clock" className="w-3.5 h-3.5"></i> {svc.duration}</span>
+                                  <span>•</span>
+                                  <span className="text-brand-gold font-semibold">#{svc.tag}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-lg font-black text-white">{svc.price}</span>
+                              </div>
+                            </div>
+                            <p className="mt-3 text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                              {svc.desc}
+                            </p>
+                            <div className="mt-4 pt-3 border-t border-brand-border flex items-center justify-between text-xs font-semibold">
+                              <span className={isSelected ? 'text-brand-gold' : 'text-slate-400 group-hover:text-white'}>
+                                {isSelected ? '✓ Servicio Elegido' : 'Seleccionar este'}
+                              </span>
+                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-brand-gold bg-brand-gold text-black' : 'border-slate-600'}`}>
+                                {isSelected && <i data-lucide="check" className="w-3.5 h-3.5 stroke-[3]"></i>}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* PASO 2: ELIGE A TU PROFESIONAL */}
+                  <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-brand-gold text-black font-black text-sm flex items-center justify-center shadow-md">2</span>
+                        <div>
+                          <h2 className="text-xl font-bold text-white">Elige a tu Profesional</h2>
+                          <p className="text-xs text-brand-muted">Todos los barberos cuentan con certificación y experiencia</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-brand-gold cursor-pointer hover:underline" onClick={() => setCurrentView('barberProfile')}>
+                        Ver fotos y reseñas de cada uno →
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {BARBERS_DATA.map(barber => {
+                        const isSelected = selectedBarber.id === barber.id;
+                        return (
+                          <div
+                            key={barber.id}
+                            onClick={() => setSelectedBarber(barber)}
+                            className={`cursor-pointer relative p-5 rounded-2xl border transition-all duration-200 text-center flex flex-col items-center justify-between ${
+                              isSelected
+                                ? 'bg-[#181F2C] border-brand-gold shadow-xl shadow-amber-500/10 scale-[1.01]'
+                                : 'bg-brand-card/90 border-brand-border hover:border-slate-600 hover:bg-brand-cardHover'
+                            }`}
+                          >
+                            <div className="w-full flex flex-col items-center">
+                              {/* Avatar */}
+                              <div className="relative mb-3">
+                                <div className={`w-20 h-20 rounded-2xl bg-gradient-to-tr ${barber.color} p-0.5 shadow-lg`}>
+                                  <div className="w-full h-full rounded-2xl bg-[#131720] flex items-center justify-center font-black text-xl text-white">
+                                    {barber.initials}
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-gold text-black flex items-center justify-center shadow-md">
+                                    <i data-lucide="check" className="w-3.5 h-3.5 stroke-[3]"></i>
+                                  </div>
+                                )}
+                              </div>
+
+                              <h3 className="font-bold text-white text-base leading-tight">{barber.name}</h3>
+                              <p className="text-xs text-brand-muted mt-1">{barber.role}</p>
+
+                              {/* Rating & Chair */}
+                              <div className="flex items-center gap-2 mt-2 bg-[#0A0C10] px-3 py-1 rounded-full border border-brand-border text-xs">
+                                <span className="flex items-center gap-1 font-bold text-amber-400">
+                                  <i data-lucide="star" className="w-3 h-3 fill-amber-400 text-amber-400"></i>
+                                  {barber.rating}
+                                </span>
+                                <span className="text-slate-500">({barber.reviews})</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-slate-400 font-semibold">{barber.chair}</span>
+                              </div>
+
+                              {/* Especialidades */}
+                              <div className="flex flex-wrap gap-1 justify-center mt-3">
+                                {barber.specialties.map((spec, i) => (
+                                  <span key={i} className="text-[10px] bg-white/5 text-slate-300 px-2 py-0.5 rounded border border-white/5 font-medium">
+                                    #{spec}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-brand-border w-full flex items-center justify-between text-xs">
+                              <span className={`font-semibold ${isSelected ? 'text-brand-gold' : 'text-slate-400'}`}>
+                                {isSelected ? '✓ Seleccionado' : 'Elegir'}
+                              </span>
+                              <span className="text-[11px] text-slate-500">@{barber.handle}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* PASO 3: FECHA Y HORARIO DISPONIBLE */}
+                  <section className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-brand-gold text-black font-black text-sm flex items-center justify-center shadow-md">3</span>
+                        <div>
+                          <h2 className="text-xl font-bold text-white">Fecha y Horario Disponible</h2>
+                          <p className="text-xs text-brand-muted">Agenda en vivo para {selectedBarber.name.split(' ')[0]} ({selectedBarber.chair})</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Selector de Días */}
+                    <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                      {DATES.map((d, i) => {
+                        const isSelectedDate = selectedDate.iso === d.iso;
+                        return (
+                          <button
+                            type="button"
+                            key={i}
+                            onClick={() => setSelectedDate(d)}
+                            className={`flex-shrink-0 flex flex-col items-center justify-center py-3.5 px-5 rounded-2xl border min-w-[95px] transition-all duration-200 ${
+                              isSelectedDate
+                                ? 'bg-brand-gold text-black border-brand-gold font-bold shadow-lg shadow-amber-500/15'
+                                : 'bg-brand-card border-brand-border text-slate-300 hover:border-slate-500 hover:bg-brand-cardHover'
+                            }`}
+                          >
+                            <span className="text-xs font-semibold uppercase tracking-wider">{d.dayName}</span>
+                            <span className="text-xl font-black">{d.dayNum}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Grid de Horas */}
+                    <div className="bg-brand-card/80 border border-brand-border rounded-2xl p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                          <i data-lucide="clock" className="w-4 h-4 text-brand-gold"></i> Horarios disponibles para {selectedDate.dayName} {selectedDate.dateStr}
+                        </span>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="flex items-center gap-1.5 text-slate-300">
+                            <span className="w-2.5 h-2.5 rounded-full bg-brand-gold"></span> Seleccionado
+                          </span>
+                          <span className="flex items-center gap-1.5 text-slate-400">
+                            <span className="w-2.5 h-2.5 rounded-full bg-white/20"></span> Agotado
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                        {TIME_SLOTS.map((slot, idx) => {
+                          const isTimeSelected = selectedTime === slot.time;
+                          if (!slot.available) {
+                            return (
+                              <div
+                                key={idx}
+                                className="py-3 px-3 rounded-xl bg-white/[0.02] border border-white/5 text-slate-600 text-center text-xs font-medium cursor-not-allowed line-through flex items-center justify-center gap-1"
+                              >
+                                {slot.time}
+                              </div>
+                            );
+                          }
+                          return (
+                            <button
+                              type="button"
+                              key={idx}
+                              onClick={() => setSelectedTime(slot.time)}
+                              className={`py-3 px-3 rounded-xl text-center text-xs font-bold transition-all duration-200 border ${
+                                isTimeSelected
+                                  ? 'bg-brand-gold text-black border-brand-gold shadow-md font-extrabold scale-105'
+                                  : 'bg-[#0E121A] text-slate-200 border-brand-border hover:border-brand-gold/60 hover:bg-white/5'
+                              }`}
+                            >
+                              {slot.time}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* PASO 4: FORMULARIO ULTRA SIMPLE (2 CAMPOS) + CTA */}
+                  <section className="bg-gradient-to-b from-[#131720] via-[#10141C] to-[#0A0C10] border border-brand-border rounded-3xl p-6 sm:p-8 shadow-2xl">
+                    <div className="max-w-xl mx-auto space-y-6">
+                      <div className="text-center space-y-2">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                          <i data-lucide="shield-check" className="w-4 h-4"></i> Confirmación Instantánea • Sin pagos por adelantado
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-black text-white">Confirma tus Datos</h2>
+                        <p className="text-xs sm:text-sm text-slate-400">
+                          Solo requerimos tu nombre y número de WhatsApp para mandarte el comprobante y recordatorio con botón de reprogramación.
+                        </p>
+                      </div>
+
+                      {/* Ticket resumen previo */}
+                      <div className="bg-[#0A0C10] p-4 rounded-2xl border border-brand-border space-y-2 text-xs sm:text-sm">
+                        <div className="flex justify-between items-center text-slate-400 border-b border-brand-border/60 pb-2">
+                          <span>Servicio seleccionado:</span>
+                          <span className="font-bold text-white">{selectedService.name} ({selectedService.duration})</span>
+                        </div>
+                        <div className="flex justify-between items-center text-slate-400 border-b border-brand-border/60 pb-2">
+                          <span>Barbero asignado:</span>
+                          <span className="font-bold text-brand-gold">{selectedBarber.name} ({selectedBarber.chair})</span>
+                        </div>
+                        <div className="flex justify-between items-center text-slate-400 border-b border-brand-border/60 pb-2">
+                          <span>Fecha & Horario:</span>
+                          <span className="font-bold text-white">{selectedDate.dayName} {selectedDate.dateStr} a las {selectedTime}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="font-bold text-white">Total a pagar en el local:</span>
+                          <span className="text-lg font-black text-brand-gold">{selectedService.price}</span>
+                        </div>
+                      </div>
+
+                      {/* Los 2 Campos Únicos */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                            1. Nombre Completo <span className="text-brand-gold">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              required
+                              value={clientForm.name}
+                              onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+                              placeholder="Ej: Matías Correa"
+                              className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition-colors pl-11"
+                            />
+                            <i data-lucide="user" className="w-4 h-4 text-slate-500 absolute left-4 top-4"></i>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                            2. Número de WhatsApp <span className="text-brand-gold">*</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              required
+                              value={clientForm.phone}
+                              onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
+                              placeholder="Ej: +56 9 8452 1199"
+                              className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold transition-colors pl-11"
+                            />
+                            <i data-lucide="message-circle" className="w-4 h-4 text-emerald-400 absolute left-4 top-4"></i>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botón CTA Confirmar */}
+                      <button
+                        type="submit"
+                        className="w-full group bg-gradient-to-r from-amber-400 via-brand-gold to-amber-600 hover:from-brand-gold hover:to-amber-500 text-black font-black text-base py-4 rounded-xl shadow-xl shadow-amber-500/20 transition-all duration-200 flex items-center justify-center gap-2 transform active:scale-[0.99]"
+                      >
+                        <i data-lucide="calendar-check" className="w-5 h-5"></i>
+                        <span>Confirmar Cita & Recibir WhatsApp</span>
+                        <i data-lucide="arrow-right" className="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
+                      </button>
+
+                      <p className="text-[11px] text-center text-slate-500">
+                        Te llegará la notificación al instante con opción de reprogramar con 1 clic. No cobramos penalización.
+                      </p>
+                    </div>
+                  </section>
+                </form>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* VIEW 2: PERFIL DE BARBERO & PORTAFOLIO (DEEP LINK / VISTA CLIENTE) */}
+            {/* ========================================================================= */}
+            {currentView === 'barberProfile' && (
+              <div className="space-y-8 animate-fade-in">
+                
+                {/* Banner de Enlace Directo para Redes Sociales */}
+                <div className="bg-gradient-to-r from-[#182130] via-brand-card to-[#182130] border border-brand-gold/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+                  <div className="flex items-center gap-3 text-xs sm:text-sm">
+                    <span className="w-8 h-8 rounded-xl bg-brand-gold/15 text-brand-gold flex items-center justify-center">
+                      <i data-lucide="link" className="w-4 h-4"></i>
+                    </span>
+                    <div>
+                      <span className="font-bold text-white">Enlace Directo para Instagram & TikTok Bio:</span>
+                      <code className="text-brand-gold font-mono ml-2 block sm:inline">barbersync.app/barbero/mateo-fade</code>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => copyDeepLink('mateo-fade')}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-black text-xs font-black px-4 py-2 rounded-xl transition-all shadow-md"
+                  >
+                    <i data-lucide="copy" className="w-3.5 h-3.5"></i>
+                    <span>Copiar Link para Bio</span>
+                  </button>
+                </div>
+
+                {/* Perfil Principal del Barbero Estrella */}
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
+                    
+                    {/* Foto / Avatar Grande */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-tr from-amber-500 via-brand-gold to-yellow-600 p-1 shadow-2xl shadow-amber-500/20">
+                        <div className="w-full h-full rounded-[22px] bg-[#10141C] flex items-center justify-center text-3xl font-black text-white">
+                          MS
+                        </div>
+                      </div>
+                      <span className="absolute -bottom-2 -right-2 bg-emerald-500 border-4 border-brand-card text-black text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-black"></span> DISPONIBLE
+                      </span>
+                    </div>
+
+                    {/* Información y Bio */}
+                    <div className="flex-1 text-center md:text-left space-y-3">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center justify-center md:justify-start gap-2">
+                            <h1 className="text-2xl sm:text-3xl font-black text-white">Mateo "FadeMaster" Silva</h1>
+                            <span title="Barbero Oficial Verificado" className="text-brand-gold">
+                              <i data-lucide="badge-check" className="w-5 h-5 fill-brand-gold text-black"></i>
+                            </span>
+                          </div>
+                          <p className="text-sm text-brand-muted font-medium">Master Barber & Director Creativo • Providencia Flagship</p>
+                        </div>
+
+                        {/* Botón de Agendar Directo */}
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleDirectBookWith(BARBERS_DATA[0])}
+                            className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-brand-goldHover hover:to-amber-600 text-black font-extrabold text-sm px-5 py-3 rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+                          >
+                            <i data-lucide="calendar" className="w-4 h-4"></i>
+                            <span>Agendar Directo con Mateo</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+                        Especialista certificado en corte con navaja libre, degradados milimétricos (Skin & Taper Fade), Mullet moderno y visagismo personalizado según la morfología del rostro.
+                      </p>
+
+                      {/* Métricas del Barbero */}
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-1 text-xs">
+                        <div className="flex items-center gap-1.5 bg-[#0A0C10] px-3 py-1.5 rounded-xl border border-brand-border">
+                          <i data-lucide="star" className="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                          <span className="font-extrabold text-white">4.95</span>
+                          <span className="text-slate-500">(348 reseñas)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-[#0A0C10] px-3 py-1.5 rounded-xl border border-brand-border">
+                          <i data-lucide="scissors" className="w-4 h-4 text-brand-gold"></i>
+                          <span className="font-bold text-white">1,450+ cortes</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-[#0A0C10] px-3 py-1.5 rounded-xl border border-brand-border">
+                          <i data-lucide="armchair" className="w-4 h-4 text-slate-400"></i>
+                          <span className="text-slate-300">Silla 01 • Master Chair</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECCIÓN PORTAFOLIO CON FILTRADO POR TAGS DE ESTILO */}
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                        <i data-lucide="image" className="w-6 h-6 text-brand-gold"></i>
+                        Portafolio Visual & Estilos
+                      </h2>
+                      <p className="text-xs text-brand-muted">Explora los acabados reales realizados en nuestra barbería</p>
+                    </div>
+
+                    {/* Buscador de especialistas por corte */}
+                    <div className="relative max-w-xs w-full">
+                      <input
+                        type="text"
+                        value={searchCutQuery}
+                        onChange={(e) => setSearchCutQuery(e.target.value)}
+                        placeholder="Buscar corte ej: Mullet, Fade..."
+                        className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-gold pl-9"
+                      />
+                      <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                      {searchCutQuery && (
+                        <button onClick={() => setSearchCutQuery('')} className="absolute right-3 top-3 text-slate-500 hover:text-white">
+                          <i data-lucide="x" className="w-3.5 h-3.5"></i>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Chips interactivos de Filtro */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {['Todos', 'Fade', 'Mullet', 'Barba', 'Tinte', 'Texturizado', 'Clásico'].map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => setActiveTag(tag)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap ${
+                          activeTag.toLowerCase() === tag.toLowerCase()
+                            ? 'bg-brand-gold text-black shadow-md font-extrabold scale-105'
+                            : 'bg-brand-card border border-brand-border text-slate-300 hover:border-slate-500 hover:text-white'
+                        }`}
+                      >
+                        <span>{tag === 'Todos' ? '✦ Todos' : `#${tag}`}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Cuadrícula Estilo Instagram */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredPortfolio.length === 0 ? (
+                      <div className="col-span-3 py-16 text-center text-slate-500 space-y-2">
+                        <i data-lucide="scissors" className="w-8 h-8 mx-auto text-slate-600"></i>
+                        <p className="text-sm font-semibold">No se encontraron cortes con el término "{searchCutQuery}"</p>
+                        <button onClick={() => { setSearchCutQuery(''); setActiveTag('Todos'); }} className="text-xs text-brand-gold underline">
+                          Restablecer filtros
+                        </button>
+                      </div>
+                    ) : (
+                      filteredPortfolio.map((cut) => (
+                        <div
+                          key={cut.id}
+                          className="group relative rounded-3xl overflow-hidden bg-brand-card border border-brand-border aspect-square flex flex-col justify-end p-5 transition-all duration-300 hover:border-brand-gold/60 shadow-xl"
+                        >
+                          {/* Fotografía de Barbería Estilizada */}
+                          <div className={`absolute inset-0 bg-gradient-to-br ${cut.imageBg} flex items-center justify-center p-6 text-center`}>
+                            <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center text-slate-400 group-hover:scale-110 group-hover:text-brand-gold transition-all duration-300">
+                              <i data-lucide="scissors" className="w-8 h-8 stroke-[1.5] mb-1"></i>
+                              <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 group-hover:text-white">PRO CUT</span>
+                            </div>
+                          </div>
+
+                          {/* Tag Badge Superior */}
+                          <div className="absolute top-4 left-4 z-10">
+                            <span className="bg-black/70 backdrop-blur-md border border-white/10 text-brand-gold px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+                              #{cut.tag}
+                            </span>
+                          </div>
+
+                          {/* Botón de Like Superior Derecho */}
+                          <button
+                            onClick={() => handleToggleLike(cut.id)}
+                            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:scale-110 transition-transform"
+                          >
+                            <i data-lucide="heart" className={`w-4 h-4 ${cut.liked ? 'fill-rose-500 text-rose-500' : 'text-slate-300'}`}></i>
+                          </button>
+
+                          {/* Overlay de Datos en Hover / Pie */}
+                          <div className="relative z-10 bg-[#0A0C10]/85 backdrop-blur-md p-4 rounded-2xl border border-white/10 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="font-bold text-sm text-white">{cut.title}</h3>
+                                <p className="text-[11px] text-brand-muted">Por {cut.barberName}</p>
+                              </div>
+                              <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+                                <i data-lucide="heart" className="w-3 h-3 fill-rose-400"></i> {cut.likes}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                              {cut.desc}
+                            </p>
+
+                            <div className="pt-2 border-t border-brand-border flex items-center justify-between">
+                              <span className="text-[11px] text-brand-gold font-bold">BarberSync Sede Providencia</span>
+                              <button
+                                onClick={() => handleDirectBookWith(BARBERS_DATA[0])}
+                                className="text-xs font-bold text-white hover:text-brand-gold transition-colors flex items-center gap-1"
+                              >
+                                <span>Pedir este corte</span>
+                                <i data-lucide="chevron-right" className="w-3.5 h-3.5"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* SECCIÓN RESEÑAS VERIFICADAS */}
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="star" className="w-5 h-5 text-amber-400 fill-amber-400"></i>
+                        Reseñas Verificadas de Clientes (WhatsApp 15m post-cita)
+                      </h2>
+                      <p className="text-xs text-brand-muted">Calificaciones emitidas automáticamente tras finalizar el servicio en la silla</p>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#0A0C10] px-3.5 py-1.5 rounded-xl border border-brand-border text-xs">
+                      <span className="text-slate-400">Promedio general:</span>
+                      <span className="text-amber-400 font-extrabold text-sm">4.95 / 5.0</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {REVIEWS_MATEO.map((rev, i) => (
+                      <div key={i} className="bg-[#0A0C10] border border-brand-border rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 text-amber-400">
+                            {[...Array(rev.rating)].map((_, idx) => (
+                              <i key={idx} data-lucide="star" className="w-3.5 h-3.5 fill-amber-400"></i>
+                            ))}
+                          </div>
+                          <span className="text-[10px] text-slate-500">{rev.date}</span>
+                        </div>
+                        <p className="text-xs text-slate-300 leading-relaxed italic">
+                          "{rev.text}"
+                        </p>
+                        <div className="pt-2 border-t border-brand-border/60 flex items-center justify-between text-xs">
+                          <span className="font-bold text-white">{rev.author}</span>
+                          <span className="text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+                            <i data-lucide="check-circle-2" className="w-3 h-3"></i> Cita Verificada
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* VIEW 3: PANEL BARBERO (GANANCIAS, CITAS EN VIVO Y GESTIÓN DE PORTAFOLIO) */}
+            {/* ========================================================================= */}
+            {currentView === 'barberDashboard' && (
+              <div className="space-y-8 animate-fade-in">
+                
+                {/* Cabecera del Panel */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-6">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-bold text-brand-gold">
+                      <span className="w-2.5 h-2.5 rounded-full bg-brand-gold animate-ping"></span>
+                      <span>Estación Silla 01 • Turno Tarde</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-white mt-1">Panel de Control: Mateo Silva</h1>
+                    <p className="text-xs sm:text-sm text-brand-muted">Control de ingresos, clientes en espera y actualización de portafolio</p>
+                  </div>
+
+                  {/* Acciones Rápidas */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowUploadCutModal(true)}
+                      className="inline-flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-black font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all"
+                    >
+                      <i data-lucide="upload" className="w-4 h-4 stroke-[2.5]"></i>
+                      <span>Subir Nuevo Corte</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentView('barberProfile')}
+                      className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-brand-border transition-all"
+                    >
+                      <i data-lucide="eye" className="w-4 h-4"></i>
+                      <span>Ver Vista Pública</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* TARJETAS DE GANANCIAS FINANCIERAS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Ganancias Hoy */}
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Ganancias Hoy</span>
+                        <h3 className="text-3xl font-black text-brand-gold mt-1">${(64000 + computedBarberTodayEarned).toLocaleString('es-CL')}</h3>
+                        <p className="text-xs text-emerald-400 flex items-center gap-1 mt-2">
+                          <i data-lucide="trending-up" className="w-3.5 h-3.5"></i> +18% sobre la media
+                        </p>
+                      </div>
+                      <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-brand-gold/30 flex items-center justify-center text-brand-gold">
+                        <i data-lucide="dollar-sign" className="w-6 h-6"></i>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ganancias Esta Semana */}
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Esta Semana</span>
+                        <h3 className="text-3xl font-black text-white mt-1">$380.000</h3>
+                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-2">
+                          <i data-lucide="calendar" className="w-3.5 h-3.5"></i> 14 citas atendidas
+                        </p>
+                      </div>
+                      <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <i data-lucide="bar-chart-3" className="w-6 h-6"></i>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Citas Pendientes Hoy */}
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Citas Pendientes</span>
+                        <h3 className="text-3xl font-black text-white mt-1">{barberPendingCount}</h3>
+                        <p className="text-xs text-amber-400 flex items-center gap-1 mt-2">
+                          <i data-lucide="clock" className="w-3.5 h-3.5"></i> Próxima cita en 20 min
+                        </p>
+                      </div>
+                      <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                        <i data-lucide="users" className="w-6 h-6"></i>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Propinas Acumuladas */}
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Propinas Hoy</span>
+                        <h3 className="text-3xl font-black text-emerald-400 mt-1">$12.500</h3>
+                        <p className="text-xs text-emerald-400 flex items-center gap-1 mt-2">
+                          <i data-lucide="heart" className="w-3.5 h-3.5 fill-emerald-400"></i> 100% para el barbero
+                        </p>
+                      </div>
+                      <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <i data-lucide="sparkles" className="w-6 h-6"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* TIMELINE DE CITAS DE HOY CON ACCIONES */}
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="calendar" className="w-5 h-5 text-brand-gold"></i>
+                        Agenda de Hoy en Silla 01 (Cronograma en Vivo)
+                      </h2>
+                      <p className="text-xs text-brand-muted">Marca completado tras atender para disparar la encuesta automática de WhatsApp</p>
+                    </div>
+
+                    <div className="text-xs text-slate-400 bg-[#0A0C10] px-3 py-1.5 rounded-xl border border-brand-border">
+                      Filtrando citas para: <strong className="text-white">Mateo Silva</strong>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {barber1Appointments.map((apt) => (
+                      <div
+                        key={apt.id}
+                        className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                          apt.status === 'completed'
+                            ? 'bg-[#0E151E]/60 border-emerald-500/30 opacity-80'
+                            : apt.status === 'noshow'
+                            ? 'bg-[#180E10]/60 border-rose-500/30 opacity-60'
+                            : 'bg-[#0E121A] border-brand-border hover:border-slate-600'
+                        }`}
+                      >
+                        {/* Time & Client details */}
+                        <div className="flex items-start sm:items-center gap-4">
+                          <div className={`p-3 rounded-2xl flex flex-col items-center justify-center min-w-[80px] ${
+                            apt.status === 'completed'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              : apt.status === 'noshow'
+                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              : 'bg-brand-gold/10 text-brand-gold border border-brand-gold/20'
+                          }`}>
+                            <i data-lucide="clock" className="w-4 h-4 mb-0.5"></i>
+                            <span className="text-xs font-black">{apt.time}</span>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-white text-base">{apt.client}</h3>
+                              {apt.status === 'completed' && (
+                                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                  ✓ Completado
+                                </span>
+                              )}
+                              {apt.status === 'noshow' && (
+                                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                  Inasistencia
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-brand-gold font-semibold mt-0.5">{apt.service}</p>
+                            <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                              <span className="flex items-center gap-1"><i data-lucide="phone" className="w-3 h-3 text-emerald-400"></i> {apt.phone}</span>
+                              <span>•</span>
+                              <span className="text-white font-extrabold">{apt.price}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Interactive Buttons */}
+                        <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-brand-border">
+                          {apt.status === 'pending' ? (
+                            <>
+                              <button
+                                onClick={() => handleUpdateAptStatus(apt.id, 'completed')}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-md"
+                              >
+                                <i data-lucide="check" className="w-4 h-4 stroke-[3]"></i>
+                                <span>Marcar Completado</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => handleUpdateAptStatus(apt.id, 'noshow')}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all"
+                              >
+                                <i data-lucide="user-x" className="w-4 h-4"></i>
+                                <span>No asistió</span>
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleUpdateAptStatus(apt.id, 'pending')}
+                              className="text-xs text-slate-400 hover:text-white underline px-3 py-1.5"
+                            >
+                              Reabrir estado
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* VIEW 4: PANEL DUEÑO / ADMIN (MÉTRICAS DEL LOCAL, CONFIGURACIÓN Y EQUIPO) */}
+            {/* ========================================================================= */}
+            {currentView === 'adminDashboard' && (
+              <div className="space-y-8 animate-fade-in">
+                
+                {/* Header Dueño */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-6">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                      <span className="text-xs font-black uppercase tracking-wider text-emerald-400">Sede Providencia • Panel de Franquicia</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-white mt-1">Dashboard de Administración</h1>
+                    <p className="text-xs sm:text-sm text-brand-muted">Métricas consolidadas de la barbería, ranking del equipo y configuración de sede</p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => triggerToast('Exportando reporte contable del mes en CSV')}
+                      className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border border-brand-border transition-all"
+                    >
+                      <i data-lucide="download" className="w-4 h-4"></i>
+                      <span>Exportar Métricas</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* MÉTRICAS CLAVE DEL NEGOCIO */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative">
+                    <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Ingresos del Día</span>
+                    <h3 className="text-3xl font-black text-brand-gold mt-1">$684.000</h3>
+                    <p className="text-xs text-emerald-400 flex items-center gap-1 mt-2">
+                      <i data-lucide="trending-up" className="w-3.5 h-3.5"></i> +14% vs mismo día semana pasada
+                    </p>
+                  </div>
+
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative">
+                    <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Citas Totales Hoy</span>
+                    <h3 className="text-3xl font-black text-white mt-1">28</h3>
+                    <p className="text-xs text-slate-400 flex items-center gap-1 mt-2">
+                      <i data-lucide="users" className="w-3.5 h-3.5"></i> 4 sillas con 88% ocupación
+                    </p>
+                  </div>
+
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative">
+                    <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Barbero Estrella del Mes</span>
+                    <h3 className="text-xl font-black text-white mt-1">Mateo Silva</h3>
+                    <p className="text-xs text-brand-gold flex items-center gap-1 mt-2">
+                      <i data-lucide="crown" className="w-3.5 h-3.5 text-brand-gold"></i> 142 cortes • 4.95 rating
+                    </p>
+                  </div>
+
+                  <div className="bg-brand-card border border-brand-border rounded-2xl p-5 relative">
+                    <span className="text-xs font-bold text-brand-muted uppercase tracking-wider">Ticket Promedio</span>
+                    <h3 className="text-3xl font-black text-emerald-400 mt-1">$28.500</h3>
+                    <p className="text-xs text-slate-400 flex items-center gap-1 mt-2">
+                      <i data-lucide="check" className="w-3.5 h-3.5"></i> Servicio más vendido: Fade + Barba
+                    </p>
+                  </div>
+                </div>
+
+                {/* GESTIÓN DE EQUIPO Y RENDIMIENTO */}
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="users" className="w-5 h-5 text-brand-gold"></i>
+                        Equipo de Barberos & Productividad
+                      </h2>
+                      <p className="text-xs text-brand-muted">Comisiones calculadas al 50/50 y satisfacción del cliente</p>
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-brand-border">
+                    {BARBERS_DATA.map((barber, index) => (
+                      <div key={barber.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${barber.color} flex items-center justify-center font-black text-white text-sm shadow-md`}>
+                            {barber.initials}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-sm text-white">{barber.name}</h3>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
+                                {barber.chair}
+                              </span>
+                            </div>
+                            <p className="text-xs text-brand-muted">{barber.role}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300">
+                          <div>
+                            <span className="text-slate-500 block text-[10px] uppercase">RATING</span>
+                            <span className="font-bold text-amber-400 flex items-center gap-1">
+                              <i data-lucide="star" className="w-3 h-3 fill-amber-400"></i> {barber.rating}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px] uppercase">PRODUCIDO HOY</span>
+                            <span className="font-black text-white">${barber.earningsToday.toLocaleString('es-CL')}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px] uppercase">ESTA SEMANA</span>
+                            <span className="font-black text-brand-gold">${barber.earningsWeek.toLocaleString('es-CL')}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block text-[10px] uppercase">ESTADO</span>
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Activo
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SECCIÓN CONFIGURACIÓN DEL LOCAL */}
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 space-y-6">
+                  <div className="flex items-center justify-between border-b border-brand-border pb-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="settings" className="w-5 h-5 text-brand-gold"></i>
+                        Configuración de la Barbería
+                      </h2>
+                      <p className="text-xs text-brand-muted">Horarios, dirección física para Google Maps y políticas de cancelación</p>
+                    </div>
+                    <button
+                      onClick={() => triggerToast('Configuración de la sede guardada correctamente')}
+                      className="bg-brand-gold hover:bg-brand-goldHover text-black font-extrabold text-xs px-4 py-2 rounded-xl shadow-md"
+                    >
+                      Guardar Cambios
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-300 uppercase tracking-wider block">Nombre de la Sede</label>
+                      <input
+                        type="text"
+                        value={businessInfo.name}
+                        onChange={(e) => setBusinessInfo({ ...businessInfo, name: e.target.value })}
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-white text-xs focus:border-brand-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-300 uppercase tracking-wider block">Dirección para Google Maps</label>
+                      <input
+                        type="text"
+                        value={businessInfo.address}
+                        onChange={(e) => setBusinessInfo({ ...businessInfo, address: e.target.value })}
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-white text-xs focus:border-brand-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-300 uppercase tracking-wider block">Horario de Apertura y Cierre</label>
+                      <input
+                        type="text"
+                        value={businessInfo.openingHours}
+                        onChange={(e) => setBusinessInfo({ ...businessInfo, openingHours: e.target.value })}
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-white text-xs focus:border-brand-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="font-bold text-slate-300 uppercase tracking-wider block">Política de Cancelación</label>
+                      <input
+                        type="text"
+                        value={businessInfo.cancellationPolicy}
+                        onChange={(e) => setBusinessInfo({ ...businessInfo, cancellationPolicy: e.target.value })}
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-white text-xs focus:border-brand-gold focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* MODAL SIMULADOR INTERACTIVO DE WHATSAPP (CONFIRMACIÓN & RECORDATORIO) */}
+            {/* ========================================================================= */}
+            {showWhatsAppModal && confirmedBookingData && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-[#111B21] border border-emerald-500/40 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-scale-up">
+                  
+                  {/* WhatsApp Header Verde */}
+                  <div className="bg-[#202C33] px-5 py-4 flex items-center justify-between border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-black">
+                        <i data-lucide="scissors" className="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-bold text-sm text-white">BarberSync Providencia</h3>
+                          <i data-lucide="badge-check" className="w-4 h-4 fill-emerald-500 text-black"></i>
+                        </div>
+                        <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Cuenta Oficial • En línea
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowWhatsAppModal(false)}
+                      className="text-slate-400 hover:text-white p-1 rounded-lg"
+                    >
+                      <i data-lucide="x" className="w-5 h-5"></i>
+                    </button>
+                  </div>
+
+                  {/* WhatsApp Chat Body */}
+                  <div className="p-5 space-y-4 whatsapp-bg text-xs">
+                    
+                    {/* Mensaje de Confirmación Automatizado */}
+                    <div className="bg-[#202C33] border border-white/5 rounded-2xl rounded-tl-none p-4 text-slate-200 space-y-3 shadow-md max-w-[95%]">
+                      <p className="leading-relaxed">
+                        ¡Hola <strong className="text-white">{confirmedBookingData.client}</strong>! ✂️ Tu cita para <strong className="text-amber-400">{confirmedBookingData.service}</strong> con <strong className="text-white">{confirmedBookingData.barberName}</strong> está <strong className="text-emerald-400 font-black">CONFIRMADA</strong>.
+                      </p>
+
+                      <div className="bg-[#111B21]/90 rounded-xl p-3 space-y-1.5 border border-white/5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Fecha:</span>
+                          <span className="font-bold text-white">{confirmedBookingData.dateStr}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Hora:</span>
+                          <span className="font-bold text-brand-gold">{confirmedBookingData.time}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Estación:</span>
+                          <span className="font-bold text-white">{confirmedBookingData.chair}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Total en local:</span>
+                          <span className="font-bold text-emerald-400">{confirmedBookingData.price}</span>
+                        </div>
+                      </div>
+
+                      {/* Botones Interactivos de WhatsApp */}
+                      <div className="pt-2 space-y-2">
+                        <button
+                          onClick={() => {
+                            setWhatsappActionToast('Solicitud de reprogramación abierta. Elige nueva fecha en el calendario.');
+                            setShowWhatsAppModal(false);
+                          }}
+                          className="w-full bg-[#111B21] hover:bg-[#2A3942] text-amber-400 font-bold py-2.5 px-3 rounded-xl border border-white/10 text-center flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <i data-lucide="calendar" className="w-3.5 h-3.5"></i>
+                          <span>Reprogramar Cita</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setAppointments(prev => prev.filter(a => a.id !== confirmedBookingData.id));
+                            setWhatsappActionToast('Cita cancelada con éxito sin cargos.');
+                            setShowWhatsAppModal(false);
+                          }}
+                          className="w-full bg-[#111B21] hover:bg-rose-950/40 text-rose-400 font-semibold py-2 px-3 rounded-xl border border-white/10 text-center flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <i data-lucide="x-circle" className="w-3.5 h-3.5"></i>
+                          <span>Cancelar Cita</span>
+                        </button>
+
+                        <a
+                          href="https://maps.google.com"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block w-full bg-[#111B21] hover:bg-[#2A3942] text-slate-300 font-medium py-2 px-3 rounded-xl border border-white/10 text-center flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <i data-lucide="map-pin" className="w-3.5 h-3.5 text-red-400"></i>
+                          <span>Ver en Google Maps (Av. Providencia 2133)</span>
+                        </a>
+                      </div>
+
+                      <div className="text-[10px] text-right text-slate-400 flex items-center justify-end gap-1 pt-1">
+                        <span>12:00</span>
+                        <i data-lucide="check-check" className="w-3.5 h-3.5 text-sky-400"></i>
+                      </div>
+                    </div>
+
+                    {/* Simulación del Sistema de Calificación Post-Servicio */}
+                    <div className="bg-[#182229] border border-amber-500/20 rounded-2xl p-3.5 space-y-2 text-slate-300">
+                      <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                        <i data-lucide="sparkles" className="w-3.5 h-3.5"></i>
+                        <span>Calificación Automática 15 min Post-Servicio</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-slate-400">
+                        Una vez finalizado tu corte, recibirás un mensaje para calificar con 1 a 5 estrellas a tu barbero y dejar tu reseña verificada.
+                      </p>
+                      <div className="flex justify-center gap-2 py-1 text-amber-400">
+                        <i data-lucide="star" className="w-4 h-4 fill-amber-400"></i>
+                        <i data-lucide="star" className="w-4 h-4 fill-amber-400"></i>
+                        <i data-lucide="star" className="w-4 h-4 fill-amber-400"></i>
+                        <i data-lucide="star" className="w-4 h-4 fill-amber-400"></i>
+                        <i data-lucide="star" className="w-4 h-4 fill-amber-400"></i>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="bg-[#202C33] p-4 flex gap-3">
+                    <button
+                      onClick={() => setShowWhatsAppModal(false)}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold py-3 rounded-xl transition-all text-xs"
+                    >
+                      Entendido, cerrar ventana
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* MODAL SUBIR NUEVO CORTE (GESTIÓN DE PORTAFOLIO BARBERO) */}
+            {/* ========================================================================= */}
+            {showUploadCutModal && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-brand-card border border-brand-border rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-scale-up">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-brand-gold/15 text-brand-gold flex items-center justify-center">
+                        <i data-lucide="upload" className="w-4 h-4"></i>
+                      </div>
+                      <h3 className="text-lg font-black text-white">Publicar en Portafolio</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowUploadCutModal(false)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <i data-lucide="x" className="w-5 h-5"></i>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handlePublishCut} className="space-y-4">
+                    {/* Zona Drag & Drop Simulada */}
+                    <div className="border-2 border-dashed border-brand-border hover:border-brand-gold/50 rounded-2xl p-6 text-center space-y-2 bg-[#0A0C10] cursor-pointer transition-colors">
+                      <i data-lucide="image-plus" className="w-8 h-8 mx-auto text-brand-gold"></i>
+                      <p className="text-xs font-bold text-white">Arrastra la foto del corte o haz clic para explorar</p>
+                      <p className="text-[11px] text-slate-500">Formato JPG, PNG optimizado para Instagram Grid</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                        Nombre del Estilo / Corte <span className="text-brand-gold">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newCutTitle}
+                        onChange={(e) => setNewCutTitle(e.target.value)}
+                        placeholder="Ej: Skin Fade con Texturizado Nuca"
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                        Categoría / Tag Principal <span className="text-brand-gold">*</span>
+                      </label>
+                      <select
+                        value={newCutTag}
+                        onChange={(e) => setNewCutTag(e.target.value)}
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-gold"
+                      >
+                        <option value="Fade">#Fade (Degradado)</option>
+                        <option value="Mullet">#Mullet (Moderno)</option>
+                        <option value="Barba">#Barba (Ritual / Perfilado)</option>
+                        <option value="Tinte">#Tinte (Platinado / Color)</option>
+                        <option value="Texturizado">#Texturizado (Crop / Tijera)</option>
+                        <option value="Clásico">#Clásico (Old School)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">
+                        Técnica o Cera Utilizada (Opcional)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={newCutDesc}
+                        onChange={(e) => setNewCutDesc(e.target.value)}
+                        placeholder="Ej: Tijera de entresacar en nuca, pomada mate al agua."
+                        className="w-full bg-[#0A0C10] border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-gold resize-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowUploadCutModal(false)}
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-xl border border-brand-border text-xs"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 bg-brand-gold hover:bg-brand-goldHover text-black font-black py-3 rounded-xl text-xs shadow-md"
+                      >
+                        Publicar en Portafolio
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Notification Toast for WhatsApp action */}
+            {whatsappActionToast && (
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-[#141B26] border border-brand-gold text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold">
+                <i data-lucide="check" className="w-4 h-4 text-brand-gold"></i>
+                <span>{whatsappActionToast}</span>
+                <button onClick={() => setWhatsappActionToast(null)} className="ml-2 text-slate-400 hover:text-white">
+                  ✕
+                </button>
+              </div>
+            )}
+
+          </main>
+
+          {/* Footer Minimalista */}
+          <footer className="border-t border-brand-border bg-[#0A0C10] mt-16 py-8 text-center text-xs text-brand-muted">
+            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white">Barber<span className="text-brand-gold">Sync</span> PRO</span>
+                <span>— Sistema Integral de Barbería, Portafolio & WhatsApp Automation</span>
+              </div>
+              <div className="flex items-center gap-4 text-slate-500 text-[11px]">
+                <span>Dark Mode Premium</span>
+                <span>•</span>
+                <span>Deep Links para Redes Sociales</span>
+                <span>•</span>
+                <span className="text-brand-gold">Lucide Icons SVG</span>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body></html>
