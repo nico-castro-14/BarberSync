@@ -1,0 +1,39 @@
+# Render Blueprint — BarberSync PRO como Static Site
+# Deploy: Render Dashboard > New > Blueprint > conectar este repo
+# (o New > Static Site apuntando al repo con estos mismos valores)
+
+services:
+  - type: web
+    name: barbersync
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Opcionales: sin estas llaves la app corre en modo demo (mockData).
+      # Configuralas en el dashboard si quieres datos reales:
+      # - key: VITE_SUPABASE_URL
+      #   sync: false
+      # - key: VITE_SUPABASE_ANON_KEY
+      #   sync: false
+      # - key: VITE_WHATSAPP_WEBHOOK_URL
+      #   sync: false
+    routes:
+      # SPA fallback: cualquier ruta profunda (/panel, /barbero/:handle) sirve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # Assets con hash de Vite: cache inmutable de 1 año
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # index.html y service worker: siempre revalidar para no servir version vieja
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache

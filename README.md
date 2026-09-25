@@ -52,6 +52,24 @@ npm run dev        # http://localhost:5173
 
 Build de producción: `npm run build` (salida en `dist/`).
 
+### Deploy en Render (Static Site)
+
+El repo ya está adaptado para Render: `render.yaml` (blueprint), `public/_redirects`
+(fallback SPA) y `.node-version` (Node 20).
+
+1. Entra a https://dashboard.render.com → **New +** → **Static Site**
+2. Conecta el repo `nico-castro-14/BarberSync` (o usa **Blueprint** y detecta `render.yaml`)
+3. Configuración (si no usa el blueprint):
+   - **Build Command:** `npm ci && npm run build`
+   - **Publish Directory:** `dist`
+4. **Environment Variables** (Build): `NODE_VERSION=20`. Opcionalmente
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` y `VITE_WHATSAPP_WEBHOOK_URL`
+   para datos reales; sin ellas queda en **modo demo** (mockData)
+5. Deploy → la app queda en `https://barbersync.onrender.com`
+
+El fallback SPA (`/* → /index.html 200`) hace que rutas profundas como
+`/panel`, `/admin` o `/barbero/:handle` funcionen al recargar o compartir el link.
+
 ### 2. Backend (guardián)
 
 ```powershell
